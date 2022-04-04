@@ -232,6 +232,7 @@ pub struct Auth<'info> {
 pub struct ExecuteTransaction<'info> {
     #[account(constraint = multisig.owner_set_seqno == transaction.owner_set_seqno)]
     multisig: Box<Account<'info, Multisig>>,
+    /// CHECK:
     #[account(
         seeds = [multisig.key().as_ref()],
         bump = multisig.nonce,
