@@ -26,28 +26,24 @@ use std::ops::Deref;
 declare_id!("6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP");
 
 #[program]
-pub mod serum_multisig {
+pub mod multisig {
     use super::*;
 
     // Initializes a new multisig account with a set of owners and a threshold.
-    pub fn create_multisig(
-        ctx: Context<CreateMultisig>,
-        owners: Vec<Pubkey>,
-        threshold: u64,
-        nonce: u8,
-    ) -> Result<()> {
-        assert_unique_owners(&owners)?;
+    pub fn create_multisig(ctx: Context<CreateMultisig>, args: CreateMultisigArgs) -> Result<()> {
+        assert_unique_owners(&args.owners)?;
         require!(
-            threshold > 0 && threshold <= owners.len() as u64,
+            args.threshold > 0 && args.threshold <= args.owners.len() as u64,
             InvalidThreshold
         );
-        require!(!owners.is_empty(), InvalidOwnersLen);
+        require!(!args.owners.is_empty(), InvalidOwnersLen);
 
         let multisig = &mut ctx.accounts.multisig;
-        multisig.owners = owners;
-        multisig.threshold = threshold;
-        multisig.nonce = nonce;
+        multisig.owners = args.owners;
+        multisig.threshold = args.threshold;
+        multisig.nonce = args.nonce;
         multisig.owner_set_seqno = 0;
+
         Ok(())
     }
 
@@ -55,9 +51,7 @@ pub mod serum_multisig {
     // which must be one of the owners of the multisig.
     pub fn create_transaction(
         ctx: Context<CreateTransaction>,
-        pid: Pubkey,
-        accs: Vec<TransactionAccount>,
-        data: Vec<u8>,
+        args: CreateTransactionArgs,
     ) -> Result<()> {
         let owner_index = ctx
             .accounts
@@ -72,9 +66,9 @@ pub mod serum_multisig {
         signers[owner_index] = true;
 
         let tx = &mut ctx.accounts.transaction;
-        tx.program_id = pid;
-        tx.accounts = accs;
-        tx.data = data;
+        tx.program_id = args.pid;
+        tx.accounts = args.accs;
+        tx.data = args.data;
         tx.signers = signers;
         tx.multisig = ctx.accounts.multisig.key();
         tx.did_execute = false;
@@ -192,19 +186,51 @@ pub mod serum_multisig {
     }
 }
 
-#[derive(Accounts)]
-pub struct CreateMultisig<'info> {
-    #[account(zero, signer)]
-    multisig: Box<Account<'info, Multisig>>,
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct CreateMultisigArgs {
+    owners: Vec<Pubkey>,
+    threshold: u64,
+    nonce: u8,
 }
 
 #[derive(Accounts)]
+#[instruction(args: CreateMultisigArgs)]
+pub struct CreateMultisig<'info> {
+    #[account(mut)]
+    owner: Signer<'info>,
+
+    #[account(
+        init,
+        payer = owner,
+        space = Multisig::space_required(&args.owners)
+    )]
+    multisig: Account<'info, Multisig>,
+
+    system_program: Program<'info, System>,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize)]
+pub struct CreateTransactionArgs {
+    pid: Pubkey,
+    accs: Vec<TransactionAccount>,
+    data: Vec<u8>,
+}
+
+#[derive(Accounts)]
+#[instruction(args: CreateTransactionArgs)]
 pub struct CreateTransaction<'info> {
-    multisig: Box<Account<'info, Multisig>>,
-    #[account(zero, signer)]
-    transaction: Box<Account<'info, Transaction>>,
+    multisig: Account<'info, Multisig>,
+    #[account(
+        init,
+        payer = proposer,
+        space = Transaction::space_required(&args.accs, &args.data)
+    )]
+    transaction: Account<'info, Transaction>,
     // One of the owners. Checked in the handler.
+    #[account(mut)]
     proposer: Signer<'info>,
+
+    system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -250,6 +276,12 @@ pub struct Multisig {
     pub owner_set_seqno: u32,
 }
 
+impl Multisig {
+    pub fn space_required(owners: &[Pubkey]) -> usize {
+        8 + std::mem::size_of::<Self>() + owners.len() * std::mem::size_of::<Pubkey>()
+    }
+}
+
 #[account]
 pub struct Transaction {
     // The multisig account this transaction belongs to.
@@ -266,6 +298,14 @@ pub struct Transaction {
     pub did_execute: bool,
     // Owner set sequence number.
     pub owner_set_seqno: u32,
+}
+
+impl Transaction {
+    pub fn space_required(accounts: &[TransactionAccount], data: &[u8]) -> usize {
+        8 + std::mem::size_of::<Transaction>()
+            + accounts.len() * std::mem::size_of::<TransactionAccount>()
+            + data.len()
+    }
 }
 
 impl From<&Transaction> for Instruction {

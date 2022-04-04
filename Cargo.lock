@@ -657,6 +657,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "multisig"
+version = "0.9.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
 name = "num-derive"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -867,13 +874,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "serum-multisig"
-version = "0.9.0"
-dependencies = [
- "anchor-lang",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 [package]
-name = "serum-multisig"
+name = "multisig"
 version = "0.9.0"
 description = "Created with Anchor"
 edition = "2018"
@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "serum_multisig"
+name = "multisig"
 
 [features]
 no-entrypoint = []
