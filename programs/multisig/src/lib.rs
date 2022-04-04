@@ -21,7 +21,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::Instruction;
 use std::convert::Into;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 declare_id!("6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP");
 
@@ -38,11 +38,13 @@ pub mod multisig {
         );
         require!(!args.owners.is_empty(), InvalidOwnersLen);
 
-        let multisig = &mut ctx.accounts.multisig;
-        multisig.owners = args.owners;
-        multisig.threshold = args.threshold;
-        multisig.nonce = args.nonce;
-        multisig.owner_set_seqno = 0;
+        let multisig = ctx.accounts.multisig.deref_mut();
+        *multisig = Multisig {
+            owners: args.owners,
+            threshold: args.threshold,
+            nonce: args.nonce,
+            owner_set_seqno: 0,
+        };
 
         Ok(())
     }
@@ -65,14 +67,16 @@ pub mod multisig {
         signers.resize(ctx.accounts.multisig.owners.len(), false);
         signers[owner_index] = true;
 
-        let tx = &mut ctx.accounts.transaction;
-        tx.program_id = args.pid;
-        tx.accounts = args.accs;
-        tx.data = args.data;
-        tx.signers = signers;
-        tx.multisig = ctx.accounts.multisig.key();
-        tx.did_execute = false;
-        tx.owner_set_seqno = ctx.accounts.multisig.owner_set_seqno;
+        let tx = ctx.accounts.transaction.deref_mut();
+        *tx = Transaction {
+            multisig: ctx.accounts.multisig.key(),
+            program_id: args.pid,
+            accounts: args.accs,
+            data: args.data,
+            signers,
+            did_execute: false,
+            owner_set_seqno: ctx.accounts.multisig.owner_set_seqno,
+        };
 
         Ok(())
     }

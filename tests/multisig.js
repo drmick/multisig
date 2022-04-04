@@ -5,7 +5,7 @@ describe("multisig", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.Provider.env());
 
-  const program = anchor.workspace.SerumMultisig;
+  const program = anchor.workspace.Multisig;
 
   it("Tests the multisig program", async () => {
     const multisig = anchor.web3.Keypair.generate();
@@ -14,27 +14,28 @@ describe("multisig", () => {
         [multisig.publicKey.toBuffer()],
         program.programId
       );
-    const multisigSize = 200; // Big enough.
 
-    const ownerA = anchor.web3.Keypair.generate();
     const ownerB = anchor.web3.Keypair.generate();
     const ownerC = anchor.web3.Keypair.generate();
     const ownerD = anchor.web3.Keypair.generate();
-    const owners = [ownerA.publicKey, ownerB.publicKey, ownerC.publicKey];
+    const owners = [program.provider.wallet.publicKey, ownerB.publicKey, ownerC.publicKey];
 
     const threshold = new anchor.BN(2);
-    await program.rpc.createMultisig(owners, threshold, nonce, {
-      accounts: {
-        multisig: multisig.publicKey,
+    await program.rpc.createMultisig(
+      {
+        owners,
+        threshold,
+        nonce
       },
-      instructions: [
-        await program.account.multisig.createInstruction(
-          multisig,
-          multisigSize
-        ),
-      ],
-      signers: [multisig],
-    });
+      {
+        accounts: {
+          multisig: multisig.publicKey,
+          owner: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+        signers: [multisig]
+      }
+    );
 
     let multisigAccount = await program.account.multisig.fetch(
       multisig.publicKey
@@ -57,27 +58,28 @@ describe("multisig", () => {
         isSigner: true,
       },
     ];
-    const newOwners = [ownerA.publicKey, ownerB.publicKey, ownerD.publicKey];
+    const newOwners = [program.provider.wallet.publicKey, ownerB.publicKey, ownerD.publicKey];
     const data = program.coder.instruction.encode("set_owners", {
       owners: newOwners,
     });
 
     const transaction = anchor.web3.Keypair.generate();
-    const txSize = 1000; // Big enough, cuz I'm lazy.
-    await program.rpc.createTransaction(pid, accounts, data, {
-      accounts: {
-        multisig: multisig.publicKey,
-        transaction: transaction.publicKey,
-        proposer: ownerA.publicKey,
+    await program.rpc.createTransaction(
+      {
+        pid,
+        accs: accounts,
+        data
       },
-      instructions: [
-        await program.account.transaction.createInstruction(
-          transaction,
-          txSize
-        ),
-      ],
-      signers: [transaction, ownerA],
-    });
+      {
+        accounts: {
+          multisig: multisig.publicKey,
+          transaction: transaction.publicKey,
+          proposer: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+        signers: [transaction],
+      }
+    );
 
     const txAccount = await program.account.transaction.fetch(
       transaction.publicKey
@@ -148,23 +150,22 @@ describe("multisig", () => {
 
     const threshold = new anchor.BN(2);
     try {
-      await program.rpc.createMultisig(owners, threshold, nonce, {
-        accounts: {
-          multisig: multisig.publicKey,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      await program.rpc.createMultisig(
+        {
+          owners, threshold, nonce
         },
-        instructions: [
-          await program.account.multisig.createInstruction(
-            multisig,
-            multisigSize
-          ),
-        ],
-        signers: [multisig],
-      });
+        {
+          accounts: {
+            multisig: multisig.publicKey,
+            owner: program.provider.wallet.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+          signers: [multisig],
+        }
+      );
       assert.fail();
     } catch (err) {
-      assert.equal(err.code, 6008);
-      assert.equal(err.msg, "Owners must be unique");
+      assert.ok(err.message.includes("0x1778"));
     }
   });
 });
