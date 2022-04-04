@@ -1,4 +1,4 @@
-anchor_version = "0.19.0"
+anchor_version = "0.23.0"
 
 [provider]
 cluster = "localnet"
@@ -8,7 +8,7 @@ wallet = "~/.config/solana/id.json"
 multisig = "6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP"
 
 [programs.devnet]
-multisig = "F3Uf5F61dmht1xuNNNkk3jnzj82TY56vVjVEhZALRkN"
+multisig = "FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ"
 
 [programs.localnet]
 multisig = "6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP"
