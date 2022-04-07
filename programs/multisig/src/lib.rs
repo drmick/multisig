@@ -23,7 +23,7 @@ use anchor_lang::solana_program::instruction::Instruction;
 use std::convert::Into;
 use std::ops::{Deref, DerefMut};
 
-declare_id!("6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP");
+declare_id!("FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ");
 
 #[program]
 pub mod multisig {

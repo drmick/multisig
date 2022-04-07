@@ -11,7 +11,7 @@ multisig = "6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP"
 multisig = "FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ"
 
 [programs.localnet]
-multisig = "6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP"
+multisig = "FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ"
 
 [scripts]
 test = "npx mocha -t 1000000 tests/"
