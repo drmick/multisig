@@ -20,12 +20,15 @@ describe("multisig", () => {
     const ownerD = anchor.web3.Keypair.generate();
     const owners = [program.provider.wallet.publicKey, ownerB.publicKey, ownerC.publicKey];
 
+    const name = "test";
+
     const threshold = new anchor.BN(2);
     await program.rpc.createMultisig(
       {
         owners,
         threshold,
-        nonce
+        nonce,
+        name,
       },
       {
         accounts: {
@@ -63,12 +66,15 @@ describe("multisig", () => {
       owners: newOwners,
     });
 
+    const txName = "test-tx";
+
     const transaction = anchor.web3.Keypair.generate();
     await program.rpc.createTransaction(
       {
         pid,
         accs: accounts,
-        data
+        data,
+        name: txName,
       },
       {
         accounts: {
@@ -148,11 +154,13 @@ describe("multisig", () => {
     const ownerB = anchor.web3.Keypair.generate();
     const owners = [ownerA.publicKey, ownerB.publicKey, ownerA.publicKey];
 
+    const name = "test";
+
     const threshold = new anchor.BN(2);
     try {
       await program.rpc.createMultisig(
         {
-          owners, threshold, nonce
+          owners, threshold, nonce, name
         },
         {
           accounts: {

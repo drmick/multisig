@@ -41,6 +41,7 @@ pub mod multisig {
         let multisig = ctx.accounts.multisig.deref_mut();
         *multisig = Multisig {
             owners: args.owners,
+            name: args.name,
             threshold: args.threshold,
             nonce: args.nonce,
             owner_set_seqno: 0,
@@ -71,6 +72,7 @@ pub mod multisig {
         *tx = Transaction {
             multisig: ctx.accounts.multisig.key(),
             program_id: args.pid,
+            name: args.name,
             accounts: args.accs,
             data: args.data,
             signers,
@@ -195,6 +197,7 @@ pub struct CreateMultisigArgs {
     owners: Vec<Pubkey>,
     threshold: u64,
     nonce: u8,
+    name: String,
 }
 
 #[derive(Accounts)]
@@ -206,7 +209,7 @@ pub struct CreateMultisig<'info> {
     #[account(
         init,
         payer = owner,
-        space = Multisig::space_required(&args.owners)
+        space = Multisig::space_required(&args.owners, &args.name)
     )]
     multisig: Account<'info, Multisig>,
 
@@ -218,6 +221,7 @@ pub struct CreateTransactionArgs {
     pid: Pubkey,
     accs: Vec<TransactionAccount>,
     data: Vec<u8>,
+    name: String,
 }
 
 #[derive(Accounts)]
@@ -227,7 +231,7 @@ pub struct CreateTransaction<'info> {
     #[account(
         init,
         payer = proposer,
-        space = Transaction::space_required(&args.accs, &args.data)
+        space = Transaction::space_required(&args.accs, &args.data, &args.name)
     )]
     transaction: Account<'info, Transaction>,
     // One of the owners. Checked in the handler.
@@ -275,14 +279,15 @@ pub struct ExecuteTransaction<'info> {
 #[account]
 pub struct Multisig {
     pub owners: Vec<Pubkey>,
+    pub name: String,
     pub threshold: u64,
     pub nonce: u8,
     pub owner_set_seqno: u32,
 }
 
 impl Multisig {
-    pub fn space_required(owners: &[Pubkey]) -> usize {
-        8 + std::mem::size_of::<Self>() + owners.len() * std::mem::size_of::<Pubkey>()
+    pub fn space_required(owners: &[Pubkey], name: &str) -> usize {
+        8 + std::mem::size_of::<Self>() + owners.len() * std::mem::size_of::<Pubkey>() + name.len()
     }
 }
 
@@ -292,6 +297,8 @@ pub struct Transaction {
     pub multisig: Pubkey,
     // Target program to execute against.
     pub program_id: Pubkey,
+    // Name of transaction.
+    pub name: String,
     // Accounts requried for the transaction.
     pub accounts: Vec<TransactionAccount>,
     // Instruction data for the transaction.
@@ -305,10 +312,11 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn space_required(accounts: &[TransactionAccount], data: &[u8]) -> usize {
+    pub fn space_required(accounts: &[TransactionAccount], data: &[u8], name: &str) -> usize {
         8 + std::mem::size_of::<Transaction>()
             + accounts.len() * std::mem::size_of::<TransactionAccount>()
             + data.len()
+            + name.len()
     }
 }
 
