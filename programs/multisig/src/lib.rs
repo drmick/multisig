@@ -14,7 +14,7 @@
 //! account, specifying the parameters for a normal solana transaction.
 //!
 //! To sign, owners should invoke the `approve` instruction, and finally,
-//! the `execute_transaction`, once enough (i.e. `threhsold`) of the owners have
+//! the `execute_transaction`, once enough (i.e. `threshold`) of the owners have
 //! signed.
 
 use anchor_lang::prelude::*;
@@ -27,7 +27,7 @@ use std::convert::Into;
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
-declare_id!("FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ");
+declare_id!("7LH8pfnCkdy74nTyXjYAiJudhB3zHpt8jEjzDQsi2tTZ");
 
 #[program]
 pub mod multisig {

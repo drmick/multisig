@@ -8,10 +8,10 @@ wallet = "~/.config/solana/id.json"
 multisig = "6tbPiQLgTU4ySYWyZGXbnVSAEzLc1uF8t5kJPXXgBmRP"
 
 [programs.devnet]
-multisig = "FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ"
+multisig = "7LH8pfnCkdy74nTyXjYAiJudhB3zHpt8jEjzDQsi2tTZ"
 
 [programs.localnet]
-multisig = "FeqQXwTJvmt6YbLTzibZJVvDFq3tKp49zjWkPqDk7oZJ"
+multisig = "7LH8pfnCkdy74nTyXjYAiJudhB3zHpt8jEjzDQsi2tTZ"
 
 [scripts]
 test = "npx mocha -t 1000000 tests/"
